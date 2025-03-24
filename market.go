@@ -539,6 +539,65 @@ func (s *Klines) Do(ctx context.Context, opts ...RequestOption) (res []*KlinesRe
 	return klines, nil
 }
 
+func (s *Klines) DoFuture(ctx context.Context, opts ...RequestOption) (res []*KlinesResponse, err error) {
+	r := &request{
+		method:   http.MethodGet,
+		endpoint: "/fapi/v1/klines",
+		secType:  secTypeNone,
+	}
+	r.setParam("symbol", s.symbol)
+	r.setParam("interval", s.interval)
+	if s.limit != nil {
+		r.setParam("limit", *s.limit)
+	}
+	if s.startTime != nil {
+		r.setParam("startTime", *s.startTime)
+	}
+	if s.endTime != nil {
+		r.setParam("endTime", *s.endTime)
+	}
+	data, err := s.c.callAPI(ctx, r, opts...)
+	if err != nil {
+		return nil, err
+	}
+	var klinesResponseArray KlinesResponseArray
+	err = json.Unmarshal(data, &klinesResponseArray)
+	if err != nil {
+		return nil, err
+	}
+	var klines []*KlinesResponse
+	for _, kline := range klinesResponseArray {
+		openTime := kline[0].(float64)
+		open := kline[1].(string)
+		high := kline[2].(string)
+		low := kline[3].(string)
+		close := kline[4].(string)
+		volume := kline[5].(string)
+		closeTime := kline[6].(float64)
+		quoteAssetVolume := kline[7].(string)
+		numberOfTrades := kline[8].(float64)
+		takerBuyBaseAssetVolume := kline[9].(string)
+		takerBuyQuoteAssetVolume := kline[10].(string)
+
+		// create a KlinesResponse struct using the parsed fields
+		klinesResponse := &KlinesResponse{
+			OpenTime:                 uint64(openTime),
+			Open:                     open,
+			High:                     high,
+			Low:                      low,
+			Close:                    close,
+			Volume:                   volume,
+			CloseTime:                uint64(closeTime),
+			QuoteAssetVolume:         quoteAssetVolume,
+			NumberOfTrades:           uint64(numberOfTrades),
+			TakerBuyBaseAssetVolume:  takerBuyBaseAssetVolume,
+			TakerBuyQuoteAssetVolume: takerBuyQuoteAssetVolume,
+		}
+		klines = append(klines, klinesResponse)
+	}
+	return klines, nil
+}
+
 type KlinesResponseArray [][]interface{}
 
 // Define Klines response data

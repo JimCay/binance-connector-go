@@ -106,7 +106,7 @@ func (c *Client) parseRequest(r *request, opts ...RequestOption) (err error) {
 	if r.header != nil {
 		header = r.header.Clone()
 	}
-	header.Set("User-Agent", fmt.Sprintf("%s/%s", Name, Version))
+	//header.Set("User-Agent", fmt.Sprintf("%s/%s", Name, Version))
 	if bodyString != "" {
 		header.Set("Content-Type", "application/x-www-form-urlencoded")
 		body = bytes.NewBufferString(bodyString)
